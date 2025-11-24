@@ -21,6 +21,10 @@
       
       /* Utilities for hide/show logic */
       .hidden-force { display: none !important; }
+      
+      /* Accordion transition */
+      .accordion-icon { transition: transform 0.2s ease; }
+      .rotate-180 { transform: rotate(180deg); }
     </style>
     <script type="importmap">
 {
@@ -146,15 +150,6 @@
                 </div>
             </div>
 
-            <!-- Select Options -->
-            <div class="bg-white p-3 mb-2 flex items-center justify-between cursor-pointer hover:bg-gray-50">
-                <span class="text-sm font-medium text-gray-800">Selecionar opções</span>
-                <div class="flex items-center text-gray-400 text-sm gap-1">
-                    <span>Selecionar</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </div>
-            </div>
-
             <!-- Shipping -->
             <div class="bg-white p-3 mb-2">
                 <div class="flex justify-between items-start mb-1">
@@ -266,8 +261,8 @@
                 <div class="mb-2">
                     <!-- Shop Logo/Name -->
                     <div class="mb-6 flex items-center gap-2">
-                        <div class="w-7 h-7 bg-black rounded-full flex items-center justify-center text-white">
-                            <svg viewBox="0 0 24 24" fill="white" class="w-4 h-4">
+                        <div class="w-7 h-7 bg-white rounded-full flex items-center justify-center text-black">
+                            <svg viewBox="0 0 24 24" fill="black" class="w-4 h-4 text-black">
                                 <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
                             </svg>
                         </div>
@@ -279,16 +274,73 @@
                     </div>
 
                     <div class="flex flex-col" id="footer-accordion">
-                        <!-- Accordion Items injected by JS or Static -->
-                        <div class="flex justify-between items-center py-4 border-b border-gray-100 cursor-pointer group">
-                            <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Comece a comprar</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        
+                        <!-- Item 1 -->
+                        <div class="border-b border-gray-100">
+                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
+                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Comece a comprar</span>
+                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
+                                <a href="#" class="block hover:underline hover:text-gray-800">Criar uma conta</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Meus pedidos</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Carrinho de compras</a>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center py-4 border-b border-gray-100 cursor-pointer group">
-                            <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Ganhe dinheiro conosco</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+
+                        <!-- Item 2 -->
+                        <div class="border-b border-gray-100">
+                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
+                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Ganhe dinheiro conosco</span>
+                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
+                                <a href="#" class="block hover:underline hover:text-gray-800">Vender na TikTok Shop</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Afiliados</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Creator Marketplace</a>
+                            </div>
                         </div>
-                        <!-- ... more items ... -->
+
+                        <!-- Item 3 -->
+                        <div class="border-b border-gray-100">
+                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
+                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Informações da empresa</span>
+                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
+                                <a href="#" class="block hover:underline hover:text-gray-800">Sobre o TikTok Shop</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Newsroom</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Contato</a>
+                            </div>
+                        </div>
+
+                        <!-- Item 4 -->
+                        <div class="border-b border-gray-100">
+                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
+                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Suporte ao cliente</span>
+                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
+                                <a href="#" class="block hover:underline hover:text-gray-800">Central de Ajuda</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Relatar um problema</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Segurança e Privacidade</a>
+                            </div>
+                        </div>
+
+                        <!-- Item 5 -->
+                        <div class="border-b border-gray-100">
+                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
+                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Políticas e aspectos legais</span>
+                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
+                                <a href="#" class="block hover:underline hover:text-gray-800">Política de Privacidade</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Termos de Uso</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Diretrizes da Comunidade</a>
+                                <a href="#" class="block hover:underline hover:text-gray-800">Propriedade Intelectual</a>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -334,20 +386,9 @@
 
             <!-- ACTION FOOTER -->
             <div class="sticky bottom-0 bg-white border-t border-gray-200 px-3 py-2 flex items-center gap-3 z-50 safe-area-bottom">
-                <div class="flex items-center gap-4 px-1">
-                    <div class="flex flex-col items-center gap-0.5 cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>
-                        <span class="text-[10px] text-gray-600">Loja</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-0.5 cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
-                        <span class="text-[10px] text-gray-600">Chat</span>
-                    </div>
-                </div>
                 <div class="flex-1 h-10">
-                    <button class="w-full h-full bg-[#fe2c55] text-white text-sm font-bold rounded-lg flex flex-col items-center justify-center leading-none hover:bg-[#e62a4d] transition-colors">
-                        <span>Comprar</span>
-                        <span class="text-[10px] font-normal">agora</span>
+                    <button class="w-full h-full bg-[#fe2c55] text-white text-sm font-bold rounded-lg flex items-center justify-center hover:bg-[#e62a4d] transition-colors">
+                        Comprar agora
                     </button>
                 </div>
             </div>
@@ -599,6 +640,14 @@
         window.toggleEditMode = () => {
             state.isEditing = !state.isEditing;
             renderProductInfo();
+        };
+
+        window.toggleAccordion = (btn) => {
+            const content = btn.nextElementSibling;
+            const icon = btn.querySelector('.accordion-icon');
+            
+            content.classList.toggle('hidden-force');
+            icon.classList.toggle('rotate-180');
         };
 
         // Input Listeners
