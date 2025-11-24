@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TikTok Shop Clone</title>
+    <title>TikTok Shop Clone (Pure JS)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,26 +16,492 @@
         width: 0px;
         background: transparent;
       }
-      .tiktok-red {
-        color: #fe2c55;
-      }
-      .bg-tiktok-red {
-        background-color: #fe2c55;
-      }
+      .tiktok-red { color: #fe2c55; }
+      .bg-tiktok-red { background-color: #fe2c55; }
+      
+      /* Utilities for hide/show logic */
+      .hidden-force { display: none !important; }
     </style>
-  <script type="importmap">
+    <script type="importmap">
 {
   "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    "react": "https://aistudiocdn.com/react@^19.2.0"
   }
 }
 </script>
-</head>
+  </head>
   <body>
-    <div id="root"></div>
+    <div id="app" class="max-w-md mx-auto bg-[#f1f1f2] min-h-screen pb-20 relative shadow-2xl">
+        
+        <!-- HEADER -->
+        <div class="sticky top-0 z-50 bg-white px-3 py-2 flex items-center justify-between shadow-sm">
+            <button class="p-2 hover:bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="flex-1 mx-3 relative">
+                <div class="flex items-center bg-white border border-[#fe2c55] rounded-md px-2 py-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fe2c55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <span class="text-sm text-gray-400 flex-1">Procurar</span>
+                    <button class="text-[#fe2c55] text-sm font-medium px-1">Procurar</button>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="p-1.5 hover:bg-gray-100 rounded-full relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    <span class="absolute top-0 right-0 bg-[#fe2c55] text-white text-[10px] font-bold px-1 rounded-full">2</span>
+                </button>
+                <button class="p-1.5 hover:bg-gray-100 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <main>
+            <!-- IMAGE GALLERY -->
+            <div class="relative w-full aspect-square bg-gray-100 overflow-hidden group select-none" id="image-container">
+                <img id="main-image" src="" alt="Product" class="w-full h-full object-cover">
+                
+                <div class="absolute bottom-4 right-4 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium z-10" id="image-counter">
+                    1/1
+                </div>
+
+                <!-- Navigation Controls -->
+                <button onclick="prevImage()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-1 rounded-full transition-colors z-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button onclick="nextImage()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-1 rounded-full transition-colors z-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+
+                <!-- Dots -->
+                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10" id="image-dots"></div>
+            </div>
+
+            <!-- PRODUCT INFO -->
+            <div class="bg-white p-3 mb-2 pb-4">
+                <!-- Price -->
+                <div class="mb-1">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-[#fe2c55] text-xl font-bold flex items-center">
+                            R$&nbsp;
+                            <span id="display-price-min"></span>
+                            <input type="number" id="input-price-min" class="w-20 border border-gray-300 rounded px-1 text-sm hidden-force" />
+                            
+                            &nbsp;-&nbsp;
+                            <span id="display-price-max"></span>
+                            <input type="number" id="input-price-max" class="w-20 border border-gray-300 rounded px-1 text-sm hidden-force" />
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-gray-400 text-xs line-through decoration-gray-400" id="display-original-price"></span>
+                        <span class="text-[#fe2c55] bg-[#fe2c55]/10 text-xs px-1 py-0.5 rounded" id="display-discount"></span>
+                    </div>
+                </div>
+
+                <!-- Deals Banner -->
+                <div class="flex items-center justify-between bg-pink-50 border border-pink-100 rounded p-1.5 mb-3">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[#fe2c55] text-xs font-bold">Oferta Relâmpago</span>
+                        <span class="text-[#fe2c55] text-xs">oferecida pela TikTok Shop</span>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </div>
+
+                <!-- Title -->
+                <div class="mb-2 relative group">
+                    <!-- View Mode -->
+                    <h1 id="display-title" class="text-gray-800 text-[15px] leading-tight font-normal">
+                        <span class="inline-block bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm mr-1.5 align-middle">Black Friday</span>
+                        <span id="title-text"></span>
+                    </h1>
+                    
+                    <!-- Edit Mode -->
+                    <div id="edit-title-container" class="hidden-force flex flex-col gap-2">
+                        <textarea id="input-title" class="w-full border-2 border-blue-400 rounded p-2 text-sm font-medium text-gray-800 focus:outline-none" rows="3"></textarea>
+                        <button id="btn-generate-ai" onclick="generateAiTitle()" class="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs py-2 rounded shadow-sm hover:opacity-90 disabled:opacity-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                            <span id="ai-btn-text">Gerar Título Viral com IA</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Seller Info -->
+                <div class="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                    <span>Vendido por</span>
+                    <span class="font-medium text-gray-700 uppercase" id="display-seller"></span>
+                </div>
+
+                <!-- Stats -->
+                <div class="flex items-center text-xs gap-3 border-b border-gray-100 pb-3">
+                    <div class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="black" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span class="font-bold text-black" id="display-rating"></span>
+                        <span class="text-gray-500" id="display-review-count"></span>
+                    </div>
+                    <div class="w-[1px] h-3 bg-gray-300"></div>
+                    <div class="text-gray-500" id="display-sold-count"></div>
+                </div>
+            </div>
+
+            <!-- Select Options -->
+            <div class="bg-white p-3 mb-2 flex items-center justify-between cursor-pointer hover:bg-gray-50">
+                <span class="text-sm font-medium text-gray-800">Selecionar opções</span>
+                <div class="flex items-center text-gray-400 text-sm gap-1">
+                    <span>Selecionar</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </div>
+            </div>
+
+            <!-- Shipping -->
+            <div class="bg-white p-3 mb-2">
+                <div class="flex justify-between items-start mb-1">
+                    <span class="text-sm font-bold text-gray-800">Envio</span>
+                    <div class="flex items-center text-gray-400 text-sm">
+                        <span id="display-shipping-cost"></span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                    <span>Entrega até Nov 27 - Dec 1</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                    <span>Proteção ao comprador de 75 dias</span>
+                </div>
+            </div>
+
+            <!-- Static Description Content -->
+            <div class="bg-white p-3 mb-2 min-h-[200px]">
+                <h3 class="text-sm font-bold text-gray-800 mb-2">Descrição do produto</h3>
+                <div class="text-xs text-gray-600 leading-relaxed space-y-3">
+                    <p>Talvez você ainda se preocupe sobre como armazenar seus sapatos desarrumados. Esta sapateira é sua melhor aposta...</p>
+                    <p class="font-bold text-gray-800">Características:</p>
+                    <ul class="space-y-2">
+                        <li>Os suportes de alumínio e plástico asseguram seus sapatos, muito resistente e durável.</li>
+                        <li>Economia de espaço; tem espaço suficiente para você armazenar todos os tipos de sapatos.</li>
+                    </ul>
+                    <!-- Shortened for brevity in code block, imagine full content here -->
+                    <p class="font-bold text-xs mt-3">*IMAGENS MERAMENTE ILUSTRATIVAS*</p>
+                </div>
+            </div>
+
+            <!-- INFORMATION FOOTER -->
+            <div class="bg-white mt-2 px-4 py-6 pb-8">
+                <div class="mb-2">
+                    <!-- Shop Logo/Name -->
+                    <div class="mb-6 flex items-center gap-2">
+                        <div class="w-7 h-7 bg-black rounded-full flex items-center justify-center text-white">
+                            <svg viewBox="0 0 24 24" fill="white" class="w-4 h-4">
+                                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- View Shop Name -->
+                        <h2 id="display-shop-name" class="text-xl font-bold text-gray-800 tracking-tight"></h2>
+                        <!-- Edit Shop Name -->
+                        <input type="text" id="input-shop-name" class="hidden-force border-2 border-blue-400 rounded px-2 py-1 text-xl font-bold text-gray-800 w-full max-w-[200px] focus:outline-none">
+                    </div>
+
+                    <div class="flex flex-col" id="footer-accordion">
+                        <!-- Accordion Items injected by JS or Static -->
+                        <div class="flex justify-between items-center py-4 border-b border-gray-100 cursor-pointer group">
+                            <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Comece a comprar</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                        <div class="flex justify-between items-center py-4 border-b border-gray-100 cursor-pointer group">
+                            <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Ganhe dinheiro conosco</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                        <!-- ... more items ... -->
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-x-6 gap-y-3 mb-8 mt-6 text-gray-600 text-xs">
+                    <div class="flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                        <span class="font-medium">Frete grátis</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l5 5a2 2 0 0 0 2.828 0l7-7a2 2 0 0 0 0-2.828l-5-5a2 2 0 0 0-1.414-.586"/><path d="m7 7 .01.01"/></svg>
+                        <span class="font-medium">Ofertas para novos clientes</span>
+                    </div>
+                </div>
+
+                <div class="flex items-end justify-between mt-4">
+                    <div class="flex gap-3">
+                        <!-- Google Play -->
+                        <button class="border border-gray-300 rounded-md px-2 py-1.5 flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                            <div class="w-6 h-6 flex items-center justify-center">
+                                <svg viewBox="0 0 24 24" class="w-full h-full"><path fill="#4285F4" d="M23.64 13.26A2.26 2.26 0 0 0 24 12a2.27 2.27 0 0 0-.36-1.26l-10.3-10.28a.73.73 0 0 0-.3.06L23.64 13.26z"/><path fill="#34A853" d="M13 12.5l10.62 10.6a2.3 2.3 0 0 0 .29-.61L13 12.5z"/><path fill="#EA4335" d="M13 11.5L2.08.64a2.24 2.24 0 0 0-.75.21L13 11.5z"/><path fill="#FBBC04" d="M1.33 1.48A2.26 2.26 0 0 0 1 2.4v19.2a2.26 2.26 0 0 0 .33.92L12.31 12 1.33 1.48z"/></svg>
+                            </div>
+                            <div class="flex flex-col items-start">
+                                <span class="text-[8px] uppercase leading-none text-gray-500 mb-0.5">GET IT ON</span>
+                                <span class="text-[12px] font-bold leading-none text-gray-800">Google Play</span>
+                            </div>
+                        </button>
+                        <!-- App Store -->
+                        <button class="border border-gray-300 rounded-md px-2 py-1.5 flex items-center gap-2 hover:bg-gray-50 transition-colors">
+                            <div class="w-5 h-5 text-black flex items-center justify-center">
+                                <svg viewBox="0 0 384 512" fill="currentColor" class="w-full h-full"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 46.9 126.7 89.8 126.7 19.6 0 35.2-11.8 66.2-11.8s46.1 11.8 63.5 11.8c48.3 0 81.7-86.8 84-91-33.3-16.5-42.8-43.3-43.2-71.7zM249.4 53.4c18.1-26.8 33-61.3 27.2-99.1-27.4 2.4-57.6 19.1-75.5 46-16.2 24.2-31.1 59.5-26.2 97.9 30.6 2.3 55.2-18.5 74.5-44.8z"/></svg>
+                            </div>
+                            <div class="flex flex-col items-start">
+                                <span class="text-[8px] uppercase leading-none text-gray-500 mb-0.5">Download on the</span>
+                                <span class="text-[12px] font-bold leading-none text-gray-800">App Store</span>
+                            </div>
+                        </button>
+                    </div>
+                    <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="p-2.5 bg-white rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 active:scale-95 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ACTION FOOTER -->
+            <div class="sticky bottom-0 bg-white border-t border-gray-200 px-3 py-2 flex items-center gap-3 z-50 safe-area-bottom">
+                <div class="flex items-center gap-4 px-1">
+                    <div class="flex flex-col items-center gap-0.5 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>
+                        <span class="text-[10px] text-gray-600">Loja</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-0.5 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                        <span class="text-[10px] text-gray-600">Chat</span>
+                    </div>
+                </div>
+                <div class="flex-1 h-10">
+                    <button class="w-full h-full bg-[#fe2c55] text-white text-sm font-bold rounded-lg flex flex-col items-center justify-center leading-none hover:bg-[#e62a4d] transition-colors">
+                        <span>Comprar</span>
+                        <span class="text-[10px] font-normal">agora</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- FLOATING EDIT BUTTON -->
+            <button onclick="toggleEditMode()" id="edit-toggle-btn" class="fixed bottom-24 right-4 z-50 p-3 rounded-full shadow-lg transition-all bg-gray-800 text-white" title="Toggle Edit Mode">
+                <!-- Pencil Icon -->
+                <svg id="icon-pencil" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                <!-- Check Icon (Hidden by default) -->
+                <svg id="icon-check" class="hidden-force" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </button>
+        </main>
+    </div>
+
+    <!-- APPLICATION LOGIC -->
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            product: {
+                id: '1',
+                title: 'Sapateira Multiuso Para Calçados 5/6/7 Andares Organizador Desmontável armário organizador',
+                priceMin: 29.90,
+                priceMax: 29.90,
+                originalPrice: 59.90,
+                discountPercentage: 50,
+                soldCount: 1200,
+                rating: 4.4,
+                reviewCount: 89,
+                sellerName: 'QUE BOM',
+                shippingCost: 9.60,
+                images: [
+                    'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/8e69aa8c15f04e5dae4f4c9bd9484665~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
+                    'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/5f6def9a7b104fa889f8181f2bfda5c2~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
+                    'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/1f1f3bdfc16c4028a765edd5a0421102~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
+                    'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/e6bfa268d80849c9afbc104167c5ce10~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
+                    'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/b65d30749b084a27b5bbe6bca69e3513~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
+                    'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/d811df3fa03641da9b0a0cca4f8046b9~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393'
+                ]
+            },
+            isEditing: false,
+            shopName: 'TikTok Shop',
+            currentImageIndex: 0
+        };
+
+        // --- DOM REFERENCES ---
+        const els = {
+            mainImage: document.getElementById('main-image'),
+            imageCounter: document.getElementById('image-counter'),
+            imageDots: document.getElementById('image-dots'),
+            
+            displayPriceMin: document.getElementById('display-price-min'),
+            displayPriceMax: document.getElementById('display-price-max'),
+            inputPriceMin: document.getElementById('input-price-min'),
+            inputPriceMax: document.getElementById('input-price-max'),
+            
+            displayOriginalPrice: document.getElementById('display-original-price'),
+            displayDiscount: document.getElementById('display-discount'),
+            
+            displayTitle: document.getElementById('display-title'),
+            titleText: document.getElementById('title-text'),
+            editTitleContainer: document.getElementById('edit-title-container'),
+            inputTitle: document.getElementById('input-title'),
+            
+            displaySeller: document.getElementById('display-seller'),
+            displayRating: document.getElementById('display-rating'),
+            displayReviewCount: document.getElementById('display-review-count'),
+            displaySoldCount: document.getElementById('display-sold-count'),
+            displayShippingCost: document.getElementById('display-shipping-cost'),
+            
+            displayShopName: document.getElementById('display-shop-name'),
+            inputShopName: document.getElementById('input-shop-name'),
+            
+            editToggleBtn: document.getElementById('edit-toggle-btn'),
+            iconPencil: document.getElementById('icon-pencil'),
+            iconCheck: document.getElementById('icon-check'),
+            aiBtnText: document.getElementById('ai-btn-text')
+        };
+
+        // --- HELPERS ---
+        const formatPrice = (val) => val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const formatCount = (count) => count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count;
+
+        // --- RENDER FUNCTIONS ---
+        function renderImages() {
+            els.mainImage.src = state.product.images[state.currentImageIndex];
+            els.imageCounter.textContent = `${state.currentImageIndex + 1}/${state.product.images.length}`;
+            
+            // Render Dots
+            els.imageDots.innerHTML = '';
+            state.product.images.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                const isActive = idx === state.currentImageIndex;
+                dot.className = `w-1.5 h-1.5 rounded-full shadow-sm transition-all ${isActive ? 'bg-[#fe2c55] scale-125' : 'bg-white/60'}`;
+                els.imageDots.appendChild(dot);
+            });
+        }
+
+        function renderProductInfo() {
+            // Price Display
+            els.displayPriceMin.textContent = formatPrice(state.product.priceMin);
+            if (state.product.priceMin !== state.product.priceMax) {
+                els.displayPriceMax.parentElement.style.display = 'inline';
+                els.displayPriceMax.textContent = formatPrice(state.product.priceMax);
+            } else if (!state.isEditing) {
+                // If prices are same and not editing, hide the range part
+                // We keep DOM but manipulate content string for cleaner look
+                els.displayPriceMax.textContent = ''; 
+                // A bit hacky but works for vanilla demo
+            }
+
+            els.displayOriginalPrice.textContent = `R$${formatPrice(state.product.originalPrice)}`;
+            els.displayDiscount.textContent = `Economize até ${state.product.discountPercentage}%`;
+            
+            // Inputs Values
+            els.inputPriceMin.value = state.product.priceMin;
+            els.inputPriceMax.value = state.product.priceMax;
+            
+            // Title
+            els.titleText.textContent = state.product.title;
+            els.inputTitle.value = state.product.title;
+            
+            // Meta
+            els.displaySeller.textContent = state.product.sellerName;
+            els.displayRating.textContent = state.product.rating;
+            els.displayReviewCount.textContent = `(${state.product.reviewCount})`;
+            els.displaySoldCount.textContent = `${formatCount(state.product.soldCount)} vendido(s)`;
+            els.displayShippingCost.textContent = `A partir de R$ ${formatPrice(state.product.shippingCost)}`;
+            
+            // Footer Shop Name
+            els.displayShopName.textContent = state.shopName;
+            els.inputShopName.value = state.shopName;
+
+            // Edit Mode Toggles
+            if (state.isEditing) {
+                els.displayPriceMin.classList.add('hidden-force');
+                els.displayPriceMax.classList.add('hidden-force');
+                els.inputPriceMin.classList.remove('hidden-force');
+                els.inputPriceMax.classList.remove('hidden-force');
+                
+                els.displayTitle.classList.add('hidden-force');
+                els.editTitleContainer.classList.remove('hidden-force');
+                
+                els.displayShopName.classList.add('hidden-force');
+                els.inputShopName.classList.remove('hidden-force');
+                
+                els.editToggleBtn.classList.remove('bg-gray-800');
+                els.editToggleBtn.classList.add('bg-green-500');
+                els.iconPencil.classList.add('hidden-force');
+                els.iconCheck.classList.remove('hidden-force');
+            } else {
+                els.displayPriceMin.classList.remove('hidden-force');
+                els.displayPriceMax.classList.remove('hidden-force');
+                els.inputPriceMin.classList.add('hidden-force');
+                els.inputPriceMax.classList.add('hidden-force');
+                
+                els.displayTitle.classList.remove('hidden-force');
+                els.editTitleContainer.classList.add('hidden-force');
+                
+                els.displayShopName.classList.remove('hidden-force');
+                els.inputShopName.classList.add('hidden-force');
+                
+                els.editToggleBtn.classList.add('bg-gray-800');
+                els.editToggleBtn.classList.remove('bg-green-500');
+                els.iconPencil.classList.remove('hidden-force');
+                els.iconCheck.classList.add('hidden-force');
+            }
+        }
+
+        // --- ACTIONS ---
+        
+        // Expose to window for onclick handlers
+        window.nextImage = () => {
+            state.currentImageIndex = (state.currentImageIndex === state.product.images.length - 1) ? 0 : state.currentImageIndex + 1;
+            renderImages();
+        };
+
+        window.prevImage = () => {
+            state.currentImageIndex = (state.currentImageIndex === 0) ? state.product.images.length - 1 : state.currentImageIndex - 1;
+            renderImages();
+        };
+
+        window.toggleEditMode = () => {
+            state.isEditing = !state.isEditing;
+            renderProductInfo();
+        };
+
+        // Input Listeners
+        els.inputPriceMin.addEventListener('input', (e) => state.product.priceMin = parseFloat(e.target.value));
+        els.inputPriceMax.addEventListener('input', (e) => state.product.priceMax = parseFloat(e.target.value));
+        els.inputTitle.addEventListener('input', (e) => state.product.title = e.target.value);
+        els.inputShopName.addEventListener('input', (e) => state.shopName = e.target.value);
+
+        // --- AI GENERATION ---
+        window.generateAiTitle = async () => {
+            const apiKey = process.env.API_KEY;
+            
+            els.aiBtnText.textContent = "Gerando...";
+            const btn = document.getElementById('btn-generate-ai');
+            btn.disabled = true;
+
+            try {
+                if (!apiKey) throw new Error("API Key missing");
+                
+                const ai = new GoogleGenAI({ apiKey });
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: `Write a short, catchy, and viral TikTok Shop product title (max 20 words) in Portuguese (Brazil) for a product named: "${state.product.title}". Use emojis.`,
+                });
+                
+                const newTitle = response.text.trim();
+                state.product.title = newTitle;
+                renderProductInfo(); // Updates textarea
+            } catch (error) {
+                console.error("AI Error:", error);
+                alert("Erro ao gerar título. Verifique o console ou a API Key.");
+            } finally {
+                els.aiBtnText.textContent = "Gerar Título Viral com IA";
+                btn.disabled = false;
+            }
+        };
+
+        // --- INIT ---
+        renderImages();
+        renderProductInfo();
+
+    </script>
   </body>
 </html>
