@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TikTok Shop Clone (Pure JS)</title>
+    <title>TTK - Sapateira</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -25,12 +25,17 @@
       /* Accordion transition */
       .accordion-icon { transition: transform 0.2s ease; }
       .rotate-180 { transform: rotate(180deg); }
+      
+      .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
     </style>
+     <!-- Import map for Gemini integration if needed in vanilla JS context -->
     <script type="importmap">
 {
   "imports": {
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0"
   }
@@ -63,25 +68,11 @@
             </div>
         </div>
 
+        <!-- MAIN CONTENT -->
         <main>
-            <!-- IMAGE GALLERY -->
-            <div class="relative w-full aspect-square bg-gray-100 overflow-hidden group select-none" id="image-container">
-                <img id="main-image" src="" alt="Product" class="w-full h-full object-cover">
-                
-                <div class="absolute bottom-4 right-4 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium z-10" id="image-counter">
-                    1/1
-                </div>
-
-                <!-- Navigation Controls -->
-                <button onclick="prevImage()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-1 rounded-full transition-colors z-20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                </button>
-                <button onclick="nextImage()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-1 rounded-full transition-colors z-20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </button>
-
-                <!-- Dots -->
-                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10" id="image-dots"></div>
+            <!-- PRODUCT IMAGES -->
+            <div id="product-images-container" class="relative w-full aspect-square bg-gray-100 overflow-hidden group select-none">
+                <!-- Rendered by JS -->
             </div>
 
             <!-- PRODUCT INFO -->
@@ -90,22 +81,22 @@
                 <div class="mb-1">
                     <div class="flex items-baseline gap-2">
                         <span class="text-[#fe2c55] text-xl font-bold flex items-center">
-                            R$&nbsp;
-                            <span id="display-price-min"></span>
-                            <input type="number" id="input-price-min" class="w-20 border border-gray-300 rounded px-1 text-sm hidden-force" />
+                            R$ <span id="display-price-min">29,90</span>
+                            <span id="price-range-separator" class="hidden"> - </span>
+                            <span id="display-price-max" class="hidden"></span>
                             
-                            &nbsp;-&nbsp;
-                            <span id="display-price-max"></span>
-                            <input type="number" id="input-price-max" class="w-20 border border-gray-300 rounded px-1 text-sm hidden-force" />
+                            <!-- Edit Inputs (Hidden by default) -->
+                            <input type="number" id="input-price-min" class="hidden-force w-20 border border-gray-300 rounded px-1 text-sm ml-2" value="29.90">
+                            <input type="number" id="input-price-max" class="hidden-force w-20 border border-gray-300 rounded px-1 text-sm ml-2" value="29.90">
                         </span>
                     </div>
                     <div class="flex items-center gap-2 mt-1">
-                        <span class="text-gray-400 text-xs line-through decoration-gray-400" id="display-original-price"></span>
-                        <span class="text-[#fe2c55] bg-[#fe2c55]/10 text-xs px-1 py-0.5 rounded" id="display-discount"></span>
+                        <span class="text-gray-400 text-xs line-through decoration-gray-400">R$ 59,90</span>
+                        <span class="text-[#fe2c55] bg-[#fe2c55]/10 text-xs px-1 py-0.5 rounded">Economize até 50%</span>
                     </div>
                 </div>
 
-                <!-- Deals Banner -->
+                <!-- Banner -->
                 <div class="flex items-center justify-between bg-pink-50 border border-pink-100 rounded p-1.5 mb-3">
                     <div class="flex items-center gap-1">
                         <span class="text-[#fe2c55] text-xs font-bold">Oferta Relâmpago</span>
@@ -116,96 +107,92 @@
 
                 <!-- Title -->
                 <div class="mb-2 relative group">
-                    <!-- View Mode -->
-                    <h1 id="display-title" class="text-gray-800 text-[15px] leading-tight font-normal">
+                    <h1 id="product-title" class="text-gray-800 text-[15px] leading-tight font-normal">
                         <span class="inline-block bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-sm mr-1.5 align-middle">Black Friday</span>
-                        <span id="title-text"></span>
+                        <span id="title-text">Sapateira Multiuso Para Calçados 5/6/7 Andares Organizador Desmontável armário organizador</span>
                     </h1>
-                    
-                    <!-- Edit Mode -->
-                    <div id="edit-title-container" class="hidden-force flex flex-col gap-2">
+                    <!-- Edit Title Area -->
+                    <div id="edit-title-area" class="hidden-force flex flex-col gap-2 mt-2">
                         <textarea id="input-title" class="w-full border-2 border-blue-400 rounded p-2 text-sm font-medium text-gray-800 focus:outline-none" rows="3"></textarea>
-                        <button id="btn-generate-ai" onclick="generateAiTitle()" class="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs py-2 rounded shadow-sm hover:opacity-90 disabled:opacity-50">
+                        <button id="btn-generate-title" class="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs py-2 rounded shadow-sm hover:opacity-90">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                            <span id="ai-btn-text">Gerar Título Viral com IA</span>
+                            Gerar Título Viral com IA
                         </button>
                     </div>
                 </div>
 
-                <!-- Seller Info -->
+                <!-- Seller -->
                 <div class="flex items-center gap-1 text-xs text-gray-500 mb-2">
                     <span>Vendido por</span>
-                    <span class="font-medium text-gray-700 uppercase" id="display-seller"></span>
+                    <span class="font-medium text-gray-700 uppercase">QUE BOM</span>
                 </div>
 
-                <!-- Stats -->
+                <!-- Social Proof -->
                 <div class="flex items-center text-xs gap-3 border-b border-gray-100 pb-3">
                     <div class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="black" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        <span class="font-bold text-black" id="display-rating"></span>
-                        <span class="text-gray-500" id="display-review-count"></span>
+                        <span class="font-bold text-black">4.4</span>
+                        <span class="text-gray-500">(89)</span>
                     </div>
                     <div class="w-[1px] h-3 bg-gray-300"></div>
-                    <div class="text-gray-500" id="display-sold-count"></div>
+                    <div class="text-gray-500">1.2K vendido(s)</div>
                 </div>
             </div>
 
-            <!-- Shipping -->
+            <!-- SHIPPING INFO -->
             <div class="bg-white p-3 mb-2">
                 <div class="flex justify-between items-start mb-1">
                     <span class="text-sm font-bold text-gray-800">Envio</span>
                     <div class="flex items-center text-gray-400 text-sm">
-                        <span id="display-shipping-cost"></span>
+                        <span>A partir de R$ 9,60</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                     <span>Entrega até Nov 27 - Dec 1</span>
                 </div>
                 <div class="flex items-center gap-2 text-xs text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     <span>Proteção ao comprador de 75 dias</span>
                 </div>
             </div>
 
             <!-- REVIEWS SECTION -->
-            <div class="bg-white p-3 mb-2" id="reviews-section">
+            <div class="bg-white p-3 mb-2">
                 <div class="flex justify-between items-center mb-3">
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold text-gray-800" id="reviews-title">Avaliações</span>
-                        <span class="text-xs text-gray-500 flex items-center gap-0.5">
-                            4.4 
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFD700" class="w-3 h-3"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
-                        </span>
-                    </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </div>
-
-                <!-- Review Tags -->
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-700">Ótima qualidade (12)</span>
-                    <span class="bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-700">Entrega rápida (8)</span>
-                    <span class="bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-700">Muito útil (5)</span>
-                </div>
-
-                <!-- Reviews List Container -->
-                <div class="flex flex-col gap-4" id="reviews-list">
-                    <!-- Reviews injected by JS -->
-                </div>
-
-                <button class="w-full text-center text-xs text-gray-500 font-medium mt-3 pt-2" id="reviews-view-all">
-                    Ver tudo
-                </button>
+                   <div class="flex items-center gap-2">
+                       <span class="text-sm font-bold text-gray-800" id="reviews-count">Avaliações (89)</span>
+                       <span class="text-xs text-gray-500 flex items-center gap-0.5">
+                           4.4 
+                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFD700" class="w-3 h-3"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>
+                       </span>
+                   </div>
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+               </div>
+               
+               <div class="flex flex-wrap gap-2 mb-4">
+                   <span class="bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-700">Ótima qualidade (12)</span>
+                   <span class="bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-700">Entrega rápida (8)</span>
+                   <span class="bg-gray-100 text-xs px-2 py-1 rounded-full text-gray-700">Muito útil (5)</span>
+               </div>
+               
+               <div id="reviews-list" class="flex flex-col gap-4">
+                   <!-- Reviews rendered by JS -->
+               </div>
+               
+               <button class="w-full text-center text-xs text-gray-500 font-medium mt-3 pt-2">Ver tudo (89)</button>
             </div>
 
-            <!-- Static Description Content -->
+            <!-- DESCRIPTION -->
             <div class="bg-white p-3 mb-2 min-h-[200px]">
-                <h3 class="text-sm font-bold text-gray-800 mb-2">Descrição do produto</h3>
+                <h3 className="text-sm font-bold text-gray-800 mb-2">Descrição do produto</h3>
                 <div class="text-xs text-gray-600 leading-relaxed space-y-3">
-                    <p>Talvez você ainda se preocupe sobre como armazenar seus sapatos desarrumados. Esta sapateira é sua melhor aposta, resistente para segurar seus sapatos. Material plástico de alta qualidade, peso leve e fácil de limpar, tem proteção fina para seus sapatos, excelente para o seu uso duradouro, os materiais de alumínio resistentes oferecem a melhor capacidade de sustentação.</p>
-                    
+                    <p>
+                    Talvez você ainda se preocupe sobre como armazenar seus sapatos desarrumados. Esta sapateira é sua melhor aposta, resistente para segurar seus sapatos. Material plástico de alta qualidade, peso leve e fácil de limpar, tem proteção fina para seus sapatos, excelente para o seu uso duradouro, os materiais de alumínio resistentes oferecem a melhor capacidade de sustentação.
+                    </p>
+
                     <p class="font-bold text-gray-800">Características:</p>
-                    <ul class="space-y-2 list-disc pl-4">
+                    <ul class="space-y-2">
                         <li>Os suportes de alumínio e plástico asseguram seus sapatos, muito resistente e durável de usar.</li>
                         <li>Esta sapateira permite a visibilidade máxima para que você encontre os sapatos de forma rápida e prática, muito conveniente.</li>
                         <li>Nenhuma ferramenta especial é necessária para montar este rack de sapato, basta encaixar as camada juntas.</li>
@@ -214,44 +201,44 @@
                     </ul>
 
                     <p class="font-bold text-gray-800">Especificação:</p>
-                    <p>Condição: 100% novo<br>
-                    Material: plástico + alumínio<br>
-                    Cor: Branco</p>
+                    <p>Condição: 100% novo</p>
+                    <p>Material: plástico + alumínio</p>
+                    <p>Cor: Branco</p>
 
                     <p class="font-bold text-gray-800 uppercase">TAMANHO :</p>
                     <p>Escolha o número de camadas de sua preferência</p>
 
-                    <div class="mt-2">
-                        <p class="font-bold text-gray-800">5 ANDARES</p>
+                    <div>
+                        <p class="font-bold text-gray-800 mt-2">5 ANDARES</p>
                         <p>Altura sapateira: 1 metro</p>
                         <p>Altura prateleiras: 19 cm</p>
                         <p>Largura: 62 cm</p>
                         <p>Comprimento: 29 cm</p>
                     </div>
 
-                    <div class="mt-2">
-                        <p class="font-bold text-gray-800">6 ANDARES</p>
+                    <div>
+                        <p class="font-bold text-gray-800 mt-2">6 ANDARES</p>
                         <p>Altura sapateira: 1,20 metros</p>
                         <p>Altura prateleiras: 19 cm</p>
                         <p>Largura: 62 cm</p>
                         <p>Comprimento: 29 cm</p>
                     </div>
 
-                    <div class="mt-2">
-                        <p class="font-bold text-gray-800">7 ANDARES</p>
+                    <div>
+                        <p class="font-bold text-gray-800 mt-2">7 ANDARES</p>
                         <p>Altura sapateira: 1,40 metros</p>
                         <p>Altura prateleiras: 19 cm</p>
                         <p>Largura: 62 cm</p>
                         <p>Comprimento: 29 cm</p>
                     </div>
 
-                    <p class="font-bold text-gray-800 uppercase mt-4">LEVE E PORTATIL</p>
+                    <p class="font-bold text-gray-800 mt-2 uppercase">LEVE E PORTATIL</p>
                     <p class="font-bold text-gray-800 uppercase">FACIL DE MONTAR</p>
 
-                    <p class="font-bold text-[10px] mt-4 text-gray-500">*IMAGENS MERAMENTE ILUSTRATIVAS*</p>
-                    <p class="font-bold text-[10px] text-gray-500">*AS CORES PODEM VARIAR DAS FOTOS DE ACORDO COM A RESOLUÇÃO DA SUA TELA*</p>
+                    <p class="font-bold text-xs mt-3">*IMAGENS MERAMENTE ILUSTRATIVAS*</p>
+                    <p class="font-bold text-xs">*AS CORES PODEM VARIAR DAS FOTOS DE ACORDO COM A RESOLUÇÃO DA SUA TELA*</p>
 
-                    <p class="font-bold text-gray-800 mt-4">TEMPO DE GARANTIA: 1 MÊS</p>
+                    <p class="font-bold text-gray-800 mt-3">TEMPO DE GARANTIA: 1 MÊS</p>
                     <p class="font-bold text-gray-800">TIPO DE GARANTIA: GARANTIA DO FORNECEDOR</p>
                 </div>
             </div>
@@ -259,108 +246,47 @@
             <!-- INFORMATION FOOTER -->
             <div class="bg-white mt-2 px-4 py-6 pb-8">
                 <div class="mb-2">
-                    <!-- Shop Logo/Name -->
+                    <!-- Shop Name -->
                     <div class="mb-6 flex items-center gap-2">
-                        <div class="w-7 h-7 bg-white rounded-full flex items-center justify-center text-black">
-                            <svg viewBox="0 0 24 24" fill="black" class="w-4 h-4 text-black">
-                                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                         <div class="w-7 h-7 flex items-center justify-center text-black">
+                            <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                               <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
                             </svg>
-                        </div>
-                        
-                        <!-- View Shop Name -->
-                        <h2 id="display-shop-name" class="text-xl font-bold text-gray-800 tracking-tight"></h2>
-                        <!-- Edit Shop Name -->
-                        <input type="text" id="input-shop-name" class="hidden-force border-2 border-blue-400 rounded px-2 py-1 text-xl font-bold text-gray-800 w-full max-w-[200px] focus:outline-none">
+                         </div>
+                         <h2 id="display-shop-name" class="text-xl font-bold text-gray-800 tracking-tight">TikTok Shop</h2>
+                         <input type="text" id="input-shop-name" class="hidden-force border-2 border-blue-400 rounded px-2 py-1 text-xl font-bold text-gray-800 w-full max-w-[200px] focus:outline-none" value="TikTok Shop">
                     </div>
 
-                    <div class="flex flex-col" id="footer-accordion">
-                        
-                        <!-- Item 1 -->
-                        <div class="border-b border-gray-100">
-                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
-                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Comece a comprar</span>
-                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
-                                <a href="#" class="block hover:underline hover:text-gray-800">Criar uma conta</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Meus pedidos</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Carrinho de compras</a>
-                            </div>
-                        </div>
-
-                        <!-- Item 2 -->
-                        <div class="border-b border-gray-100">
-                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
-                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Ganhe dinheiro conosco</span>
-                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
-                                <a href="#" class="block hover:underline hover:text-gray-800">Vender na TikTok Shop</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Afiliados</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Creator Marketplace</a>
-                            </div>
-                        </div>
-
-                        <!-- Item 3 -->
-                        <div class="border-b border-gray-100">
-                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
-                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Informações da empresa</span>
-                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
-                                <a href="#" class="block hover:underline hover:text-gray-800">Sobre o TikTok Shop</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Newsroom</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Contato</a>
-                            </div>
-                        </div>
-
-                        <!-- Item 4 -->
-                        <div class="border-b border-gray-100">
-                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
-                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Suporte ao cliente</span>
-                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
-                                <a href="#" class="block hover:underline hover:text-gray-800">Central de Ajuda</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Relatar um problema</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Segurança e Privacidade</a>
-                            </div>
-                        </div>
-
-                        <!-- Item 5 -->
-                        <div class="border-b border-gray-100">
-                            <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center py-4 group bg-white text-left focus:outline-none">
-                                <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">Políticas e aspectos legais</span>
-                                <svg class="accordion-icon w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-                            <div class="hidden-force pb-4 pl-1 text-xs text-gray-500 space-y-2">
-                                <a href="#" class="block hover:underline hover:text-gray-800">Política de Privacidade</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Termos de Uso</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Diretrizes da Comunidade</a>
-                                <a href="#" class="block hover:underline hover:text-gray-800">Propriedade Intelectual</a>
-                            </div>
-                        </div>
-
+                    <!-- Accordion List -->
+                    <div id="footer-accordion" class="flex flex-col">
+                        <!-- Items rendered by JS -->
                     </div>
                 </div>
 
+                <!-- Badges -->
                 <div class="flex flex-wrap gap-x-6 gap-y-3 mb-8 mt-6 text-gray-600 text-xs">
                     <div class="flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                         <span class="font-medium">Frete grátis</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l5 5a2 2 0 0 0 2.828 0l7-7a2 2 0 0 0 0-2.828l-5-5a2 2 0 0 0-1.414-.586"/><path d="m7 7 .01.01"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path><path d="M7 7h.01"></path></svg>
                         <span class="font-medium">Ofertas para novos clientes</span>
                     </div>
                 </div>
 
+                <!-- App Buttons -->
                 <div class="flex items-end justify-between mt-4">
                     <div class="flex gap-3">
                         <!-- Google Play -->
                         <button class="border border-gray-300 rounded-md px-2 py-1.5 flex items-center gap-2 hover:bg-gray-50 transition-colors">
                             <div class="w-6 h-6 flex items-center justify-center">
-                                <svg viewBox="0 0 24 24" class="w-full h-full"><path fill="#4285F4" d="M23.64 13.26A2.26 2.26 0 0 0 24 12a2.27 2.27 0 0 0-.36-1.26l-10.3-10.28a.73.73 0 0 0-.3.06L23.64 13.26z"/><path fill="#34A853" d="M13 12.5l10.62 10.6a2.3 2.3 0 0 0 .29-.61L13 12.5z"/><path fill="#EA4335" d="M13 11.5L2.08.64a2.24 2.24 0 0 0-.75.21L13 11.5z"/><path fill="#FBBC04" d="M1.33 1.48A2.26 2.26 0 0 0 1 2.4v19.2a2.26 2.26 0 0 0 .33.92L12.31 12 1.33 1.48z"/></svg>
+                                <svg viewBox="0 0 24 24" class="w-full h-full">
+                                    <path fill="#4285F4" d="M23.64 13.26A2.26 2.26 0 0 0 24 12a2.27 2.27 0 0 0-.36-1.26l-10.3-10.28a.73.73 0 0 0-.3.06L23.64 13.26z"/>
+                                    <path fill="#34A853" d="M13 12.5l10.62 10.6a2.3 2.3 0 0 0 .29-.61L13 12.5z"/>
+                                    <path fill="#EA4335" d="M13 11.5L2.08.64a2.24 2.24 0 0 0-.75.21L13 11.5z"/>
+                                    <path fill="#FBBC04" d="M1.33 1.48A2.26 2.26 0 0 0 1 2.4v19.2a2.26 2.26 0 0 0 .33.92L12.31 12 1.33 1.48z"/>
+                                </svg>
                             </div>
                             <div class="flex flex-col items-start">
                                 <span class="text-[8px] uppercase leading-none text-gray-500 mb-0.5">GET IT ON</span>
@@ -370,7 +296,9 @@
                         <!-- App Store -->
                         <button class="border border-gray-300 rounded-md px-2 py-1.5 flex items-center gap-2 hover:bg-gray-50 transition-colors">
                             <div class="w-5 h-5 text-black flex items-center justify-center">
-                                <svg viewBox="0 0 384 512" fill="currentColor" class="w-full h-full"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 46.9 126.7 89.8 126.7 19.6 0 35.2-11.8 66.2-11.8s46.1 11.8 63.5 11.8c48.3 0 81.7-86.8 84-91-33.3-16.5-42.8-43.3-43.2-71.7zM249.4 53.4c18.1-26.8 33-61.3 27.2-99.1-27.4 2.4-57.6 19.1-75.5 46-16.2 24.2-31.1 59.5-26.2 97.9 30.6 2.3 55.2-18.5 74.5-44.8z"/></svg>
+                                <svg viewBox="0 0 384 512" fill="currentColor" class="w-full h-full">
+                                    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 46.9 126.7 89.8 126.7 19.6 0 35.2-11.8 66.2-11.8s46.1 11.8 63.5 11.8c48.3 0 81.7-86.8 84-91-33.3-16.5-42.8-43.3-43.2-71.7zM249.4 53.4c18.1-26.8 33-61.3 27.2-99.1-27.4 2.4-57.6 19.1-75.5 46-16.2 24.2-31.1 59.5-26.2 97.9 30.6 2.3 55.2-18.5 74.5-44.8z"/>
+                                </svg>
                             </div>
                             <div class="flex flex-col items-start">
                                 <span class="text-[8px] uppercase leading-none text-gray-500 mb-0.5">Download on the</span>
@@ -378,49 +306,43 @@
                             </div>
                         </button>
                     </div>
-                    <button onclick="window.scrollTo({top:0, behavior:'smooth'})" class="p-2.5 bg-white rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 active:scale-95 transition-transform">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                    <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="p-2.5 bg-white rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 active:scale-95 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                     </button>
                 </div>
             </div>
-
-            <!-- ACTION FOOTER -->
-            <div class="sticky bottom-0 bg-white border-t border-gray-200 px-3 py-2 flex items-center gap-3 z-50 safe-area-bottom">
-                <div class="flex-1 h-10">
-                    <button onclick="window.location.href='https://pagamento.superutilidades.shop/checkout?product=70d6f1a2-c994-11f0-a40c-46da4690ad53'" class="w-full h-full bg-[#fe2c55] text-white text-sm font-bold rounded-lg flex items-center justify-center hover:bg-[#e62a4d] transition-colors">
-                        Comprar agora
-                    </button>
-                </div>
-            </div>
-
-            <!-- FLOATING EDIT BUTTON -->
-            <button onclick="toggleEditMode()" id="edit-toggle-btn" class="fixed bottom-24 right-4 z-50 p-3 rounded-full shadow-lg transition-all bg-gray-800 text-white" title="Toggle Edit Mode">
-                <!-- Pencil Icon -->
-                <svg id="icon-pencil" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                <!-- Check Icon (Hidden by default) -->
-                <svg id="icon-check" class="hidden-force" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            </button>
         </main>
+        
+        <!-- ACTION FOOTER -->
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-3 py-2 flex items-center gap-3 z-50 safe-area-bottom">
+            <div class="flex-1 h-10">
+                <button 
+                  onclick="window.location.href='https://pagamento.superutilidades.shop/checkout?product=70d6f1a2-c994-11f0-a40c-46da4690ad53'"
+                  class="w-full h-full bg-[#fe2c55] text-white text-sm font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#e62a4d] transition-colors"
+                >
+                    <span>Comprar agora</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Floating Edit Toggle -->
+        <button id="btn-toggle-edit" class="fixed bottom-24 right-4 z-50 p-3 bg-gray-800 text-white rounded-full shadow-lg transition-all hover:scale-105 active:scale-95">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+        </button>
+
     </div>
 
-    <!-- APPLICATION LOGIC -->
+    <!-- MAIN SCRIPT -->
     <script type="module">
         import { GoogleGenAI } from "@google/genai";
 
-        // --- STATE MANAGEMENT ---
+        // --- STATE ---
         const state = {
+            isEditing: false,
             product: {
-                id: '1',
                 title: 'Sapateira Multiuso Para Calçados 5/6/7 Andares Organizador Desmontável armário organizador',
                 priceMin: 29.90,
                 priceMax: 29.90,
-                originalPrice: 59.90,
-                discountPercentage: 50,
-                soldCount: 1200,
-                rating: 4.4,
-                reviewCount: 89,
-                sellerName: 'QUE BOM',
-                shippingCost: 9.60,
                 images: [
                     'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/8e69aa8c15f04e5dae4f4c9bd9484665~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
                     'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/5f6def9a7b104fa889f8181f2bfda5c2~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
@@ -428,268 +350,260 @@
                     'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/e6bfa268d80849c9afbc104167c5ce10~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
                     'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/b65d30749b084a27b5bbe6bca69e3513~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393',
                     'https://p16-oec-va.ibyteimg.com/tos-maliva-i-o3syd03w52-us/d811df3fa03641da9b0a0cca4f8046b9~tplv-o3syd03w52-resize-webp:800:800.webp?dr=15584&t=555f072d&ps=933b5bde&shp=6ce186a1&shcp=e1be8f53&idc=my&from=1826719393'
-                ]
+                ],
+                currentImageIndex: 0
             },
-            reviews: [
-                {
-                    id: 1,
-                    user: 'Maria S.',
-                    avatar: 'https://picsum.photos/seed/user1/50/50',
-                    rating: 5,
-                    text: 'Amei a sapateira! Muito fácil de montar e coube todos os meus sapatos. Recomendo demais a loja, chegou super rápido.'
-                },
-                {
-                    id: 2,
-                    user: 'João Paulo',
-                    avatar: 'https://picsum.photos/seed/user2/50/50',
-                    rating: 4,
-                    text: 'Produto conforme o anúncio. O material parece frágil no início, mas depois de montado fica bem firme. Ótimo custo benefício.'
-                },
-                {
-                    id: 3,
-                    user: 'Ana Clara',
-                    avatar: 'https://picsum.photos/seed/user3/50/50',
-                    rating: 5,
-                    text: 'Chegou antes do prazo! Ajudou muito a organizar meu quarto. Só achei um pouco difícil de encaixar algumas peças, mas deu certo.'
-                },
-                {
-                    id: 4,
-                    user: 'Fernanda L.',
-                    avatar: 'https://picsum.photos/seed/user4/50/50',
-                    rating: 5,
-                    text: 'Gostei bastante, cabe muita coisa. Comprarei outra para o quarto dos meus filhos.'
-                }
-            ],
-            isEditing: false,
             shopName: 'TikTok Shop',
-            currentImageIndex: 0
+            reviews: [
+                { id: 1, user: 'Maria S.', avatar: 'https://picsum.photos/seed/user1/50/50', rating: 5, text: 'Amei a sapateira! Muito fácil de montar e coube todos os meus sapatos. Recomendo demais a loja, chegou super rápido.' },
+                { id: 2, user: 'João Paulo', avatar: 'https://picsum.photos/seed/user2/50/50', rating: 4, text: 'Produto conforme o anúncio. O material parece frágil no início, mas depois de montado fica bem firme. Ótimo custo benefício.' },
+                { id: 3, user: 'Ana Clara', avatar: 'https://picsum.photos/seed/user3/50/50', rating: 5, text: 'Chegou antes do prazo! Ajudou muito a organizar meu quarto. Só achei um pouco difícil de encaixar algumas peças, mas deu certo.' },
+                { id: 4, user: 'Fernanda L.', avatar: 'https://picsum.photos/seed/user4/50/50', rating: 5, text: 'Gostei bastante, cabe muita coisa. Comprarei outra para o quarto dos meus filhos.' }
+            ]
         };
-
-        // --- DOM REFERENCES ---
-        const els = {
-            mainImage: document.getElementById('main-image'),
-            imageCounter: document.getElementById('image-counter'),
-            imageDots: document.getElementById('image-dots'),
-            
-            displayPriceMin: document.getElementById('display-price-min'),
-            displayPriceMax: document.getElementById('display-price-max'),
-            inputPriceMin: document.getElementById('input-price-min'),
-            inputPriceMax: document.getElementById('input-price-max'),
-            
-            displayOriginalPrice: document.getElementById('display-original-price'),
-            displayDiscount: document.getElementById('display-discount'),
-            
-            displayTitle: document.getElementById('display-title'),
-            titleText: document.getElementById('title-text'),
-            editTitleContainer: document.getElementById('edit-title-container'),
-            inputTitle: document.getElementById('input-title'),
-            
-            displaySeller: document.getElementById('display-seller'),
-            displayRating: document.getElementById('display-rating'),
-            displayReviewCount: document.getElementById('display-review-count'),
-            displaySoldCount: document.getElementById('display-sold-count'),
-            displayShippingCost: document.getElementById('display-shipping-cost'),
-            
-            displayShopName: document.getElementById('display-shop-name'),
-            inputShopName: document.getElementById('input-shop-name'),
-            
-            editToggleBtn: document.getElementById('edit-toggle-btn'),
-            iconPencil: document.getElementById('icon-pencil'),
-            iconCheck: document.getElementById('icon-check'),
-            aiBtnText: document.getElementById('ai-btn-text'),
-            
-            // Reviews
-            reviewsTitle: document.getElementById('reviews-title'),
-            reviewsList: document.getElementById('reviews-list'),
-            reviewsViewAll: document.getElementById('reviews-view-all')
-        };
-
-        // --- HELPERS ---
-        const formatPrice = (val) => val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const formatCount = (count) => count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count;
 
         // --- RENDER FUNCTIONS ---
-        function renderImages() {
-            els.mainImage.src = state.product.images[state.currentImageIndex];
-            els.imageCounter.textContent = `${state.currentImageIndex + 1}/${state.product.images.length}`;
+        function renderProduct() {
+            // Price
+            const minPriceEl = document.getElementById('display-price-min');
+            const maxPriceEl = document.getElementById('display-price-max');
+            const sepEl = document.getElementById('price-range-separator');
             
-            // Render Dots
-            els.imageDots.innerHTML = '';
-            state.product.images.forEach((_, idx) => {
-                const dot = document.createElement('div');
-                const isActive = idx === state.currentImageIndex;
-                dot.className = `w-1.5 h-1.5 rounded-full shadow-sm transition-all ${isActive ? 'bg-[#fe2c55] scale-125' : 'bg-white/60'}`;
-                els.imageDots.appendChild(dot);
-            });
+            const fmt = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            
+            minPriceEl.innerText = fmt(state.product.priceMin);
+            if (state.product.priceMin !== state.product.priceMax) {
+                maxPriceEl.innerText = fmt(state.product.priceMax);
+                maxPriceEl.classList.remove('hidden');
+                sepEl.classList.remove('hidden');
+            } else {
+                maxPriceEl.classList.add('hidden');
+                sepEl.classList.add('hidden');
+            }
+
+            // Title
+            document.getElementById('title-text').innerText = state.product.title;
+            
+            // Inputs
+            document.getElementById('input-price-min').value = state.product.priceMin;
+            document.getElementById('input-price-max').value = state.product.priceMax;
+            document.getElementById('input-title').value = state.product.title;
         }
 
-        function renderProductInfo() {
-            // Price Display
-            els.displayPriceMin.textContent = formatPrice(state.product.priceMin);
-            if (state.product.priceMin !== state.product.priceMax) {
-                els.displayPriceMax.parentElement.style.display = 'inline';
-                els.displayPriceMax.textContent = formatPrice(state.product.priceMax);
-            } else if (!state.isEditing) {
-                // If prices are same and not editing, hide the range part
-                // We keep DOM but manipulate content string for cleaner look
-                els.displayPriceMax.textContent = ''; 
-                // A bit hacky but works for vanilla demo
+        function renderImages() {
+            const container = document.getElementById('product-images-container');
+            const { images, currentImageIndex } = state.product;
+            
+            let html = `
+                <img src="${images[currentImageIndex]}" class="w-full h-full object-cover transition-opacity duration-300">
+                <div class="absolute bottom-4 right-4 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium z-10">
+                    ${currentImageIndex + 1}/${images.length}
+                </div>
+            `;
+            
+            if (images.length > 1) {
+                html += `
+                    <button id="btn-prev-img" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-1 rounded-full transition-colors z-20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button id="btn-next-img" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-1 rounded-full transition-colors z-20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10">
+                        ${images.map((_, idx) => `
+                            <div class="w-1.5 h-1.5 rounded-full shadow-sm transition-all ${idx === currentImageIndex ? 'bg-[#fe2c55] scale-125' : 'bg-white/60'}"></div>
+                        `).join('')}
+                    </div>
+                `;
             }
+            container.innerHTML = html;
+            
+            // Re-attach listeners since HTML was replaced
+            if (images.length > 1) {
+                document.getElementById('btn-prev-img').onclick = (e) => {
+                    e.stopPropagation();
+                    state.product.currentImageIndex = (state.product.currentImageIndex === 0) ? images.length - 1 : state.product.currentImageIndex - 1;
+                    renderImages();
+                };
+                document.getElementById('btn-next-img').onclick = (e) => {
+                    e.stopPropagation();
+                    state.product.currentImageIndex = (state.product.currentImageIndex === images.length - 1) ? 0 : state.product.currentImageIndex + 1;
+                    renderImages();
+                };
+            }
+        }
 
-            els.displayOriginalPrice.textContent = `R$${formatPrice(state.product.originalPrice)}`;
-            els.displayDiscount.textContent = `Economize até ${state.product.discountPercentage}%`;
+        function renderFooter() {
+            const displayEl = document.getElementById('display-shop-name');
+            const inputEl = document.getElementById('input-shop-name');
             
-            // Inputs Values
-            els.inputPriceMin.value = state.product.priceMin;
-            els.inputPriceMax.value = state.product.priceMax;
+            displayEl.innerText = state.shopName;
+            inputEl.value = state.shopName;
             
-            // Title
-            els.titleText.textContent = state.product.title;
-            els.inputTitle.value = state.product.title;
-            
-            // Meta
-            els.displaySeller.textContent = state.product.sellerName;
-            els.displayRating.textContent = state.product.rating;
-            els.displayReviewCount.textContent = `(${state.product.reviewCount})`;
-            els.displaySoldCount.textContent = `${formatCount(state.product.soldCount)} vendido(s)`;
-            els.displayShippingCost.textContent = `A partir de R$ ${formatPrice(state.product.shippingCost)}`;
-            
-            // Footer Shop Name
-            els.displayShopName.textContent = state.shopName;
-            els.inputShopName.value = state.shopName;
-
-            // Edit Mode Toggles
             if (state.isEditing) {
-                els.displayPriceMin.classList.add('hidden-force');
-                els.displayPriceMax.classList.add('hidden-force');
-                els.inputPriceMin.classList.remove('hidden-force');
-                els.inputPriceMax.classList.remove('hidden-force');
-                
-                els.displayTitle.classList.add('hidden-force');
-                els.editTitleContainer.classList.remove('hidden-force');
-                
-                els.displayShopName.classList.add('hidden-force');
-                els.inputShopName.classList.remove('hidden-force');
-                
-                els.editToggleBtn.classList.remove('bg-gray-800');
-                els.editToggleBtn.classList.add('bg-green-500');
-                els.iconPencil.classList.add('hidden-force');
-                els.iconCheck.classList.remove('hidden-force');
+                displayEl.classList.add('hidden-force');
+                inputEl.classList.remove('hidden-force');
             } else {
-                els.displayPriceMin.classList.remove('hidden-force');
-                els.displayPriceMax.classList.remove('hidden-force');
-                els.inputPriceMin.classList.add('hidden-force');
-                els.inputPriceMax.classList.add('hidden-force');
-                
-                els.displayTitle.classList.remove('hidden-force');
-                els.editTitleContainer.classList.add('hidden-force');
-                
-                els.displayShopName.classList.remove('hidden-force');
-                els.inputShopName.classList.add('hidden-force');
-                
-                els.editToggleBtn.classList.add('bg-gray-800');
-                els.editToggleBtn.classList.remove('bg-green-500');
-                els.iconPencil.classList.remove('hidden-force');
-                els.iconCheck.classList.add('hidden-force');
+                displayEl.classList.remove('hidden-force');
+                inputEl.classList.add('hidden-force');
             }
+        }
+        
+        function renderAccordion() {
+            const accordionContainer = document.getElementById('footer-accordion');
+            const sections = [
+                { title: 'Comece a comprar', items: ['Criar uma conta', 'Meus pedidos', 'Carrinho', 'Lista de desejos'] },
+                { title: 'Ganhe dinheiro conosco', items: ['Venda na TikTok Shop', 'Afiliados', 'Creator Marketplace'] },
+                { title: 'Informações da empresa', items: ['Sobre nós', 'Carreiras', 'Imprensa', 'Blog'] },
+                { title: 'Suporte ao cliente', items: ['Central de ajuda', 'Fale conosco', 'Status do pedido', 'Devoluções'] },
+                { title: 'Políticas e aspectos legais', items: ['Termos de uso', 'Política de privacidade', 'Cookies', 'Propriedade intelectual'] }
+            ];
+            
+            accordionContainer.innerHTML = sections.map((section, index) => `
+                <div class="border-b border-gray-100">
+                    <div class="accordion-header flex justify-between items-center py-4 cursor-pointer group" data-index="${index}">
+                        <span class="text-[13px] font-bold text-gray-800 group-hover:text-gray-600 transition-colors">${section.title}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-icon"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                    <div class="accordion-content hidden-force pb-4 pl-2" id="accordion-content-${index}">
+                        <ul class="space-y-2 text-xs text-gray-500">
+                            ${section.items.map(item => `<li class="hover:text-[#fe2c55] cursor-pointer transition-colors">${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `).join('');
+
+            // Attach listeners
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const idx = header.getAttribute('data-index');
+                    const content = document.getElementById(`accordion-content-${idx}`);
+                    const icon = header.querySelector('.accordion-icon');
+                    
+                    if (content.classList.contains('hidden-force')) {
+                        content.classList.remove('hidden-force');
+                        icon.classList.add('rotate-180');
+                    } else {
+                        content.classList.add('hidden-force');
+                        icon.classList.remove('rotate-180');
+                    }
+                });
+            });
         }
         
         function renderReviews() {
-            els.reviewsList.innerHTML = '';
-            els.reviewsTitle.textContent = `Avaliações (${state.product.reviewCount})`;
-            els.reviewsViewAll.textContent = `Ver tudo (${state.product.reviewCount})`;
-
-            state.reviews.forEach(review => {
-                const div = document.createElement('div');
-                div.className = "border-b border-gray-100 pb-3 last:border-0 last:pb-0";
+            const container = document.getElementById('reviews-list');
+            container.innerHTML = state.reviews.map(review => {
+                const stars = Array(5).fill(0).map((_, i) => 
+                    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${i < review.rating ? '#FFD700' : '#e5e7eb'}" class="w-3 h-3"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>`
+                ).join('');
                 
-                // Generate stars HTML
-                let starsHtml = '';
-                for(let i=0; i<5; i++) {
-                    const color = i < review.rating ? '#FFD700' : '#e5e7eb';
-                    starsHtml += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" class="w-3 h-3"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" /></svg>`;
-                }
-
-                div.innerHTML = `
-                    <div class="flex items-center gap-2 mb-1.5">
-                        <div class="w-6 h-6 bg-gray-200 rounded-full overflow-hidden">
-                            <img src="${review.avatar}" alt="${review.user}" class="w-full h-full object-cover" />
+                return `
+                    <div class="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <div class="w-6 h-6 bg-gray-200 rounded-full overflow-hidden">
+                                <img src="${review.avatar}" alt="${review.user}" class="w-full h-full object-cover" />
+                            </div>
+                            <span class="text-xs text-gray-600 font-medium">${review.user}</span>
+                            <div class="flex gap-0.5">${stars}</div>
                         </div>
-                        <span class="text-xs text-gray-600 font-medium">${review.user}</span>
-                        <div class="flex gap-0.5">${starsHtml}</div>
+                        <p class="text-xs text-gray-800 leading-relaxed">${review.text}</p>
                     </div>
-                    <p class="text-xs text-gray-800 leading-relaxed">${review.text}</p>
                 `;
-                els.reviewsList.appendChild(div);
-            });
+            }).join('');
         }
 
-        // --- ACTIONS ---
-        
-        // Expose to window for onclick handlers
-        window.nextImage = () => {
-            state.currentImageIndex = (state.currentImageIndex === state.product.images.length - 1) ? 0 : state.currentImageIndex + 1;
-            renderImages();
-        };
-
-        window.prevImage = () => {
-            state.currentImageIndex = (state.currentImageIndex === 0) ? state.product.images.length - 1 : state.currentImageIndex - 1;
-            renderImages();
-        };
-
-        window.toggleEditMode = () => {
+        function toggleEditMode() {
             state.isEditing = !state.isEditing;
-            renderProductInfo();
-        };
-
-        window.toggleAccordion = (btn) => {
-            const content = btn.nextElementSibling;
-            const icon = btn.querySelector('.accordion-icon');
+            const btn = document.getElementById('btn-toggle-edit');
             
-            content.classList.toggle('hidden-force');
-            icon.classList.toggle('rotate-180');
-        };
+            // Icon
+            btn.innerHTML = state.isEditing 
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
+            
+            btn.className = `fixed bottom-24 right-4 z-50 p-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 ${state.isEditing ? 'bg-green-500' : 'bg-gray-800'} text-white`;
+
+            // Toggle visibility of Edit areas vs Display areas
+            const els = {
+                titleText: document.getElementById('title-text'),
+                editTitleArea: document.getElementById('edit-title-area'),
+                displayPriceMin: document.getElementById('display-price-min'),
+                displayPriceMax: document.getElementById('display-price-max'),
+                inputPriceMin: document.getElementById('input-price-min'),
+                inputPriceMax: document.getElementById('input-price-max'),
+                sep: document.getElementById('price-range-separator')
+            };
+
+            if (state.isEditing) {
+                els.titleText.classList.add('hidden-force');
+                els.editTitleArea.classList.remove('hidden-force');
+                els.displayPriceMin.classList.add('hidden-force');
+                els.displayPriceMax.classList.add('hidden-force');
+                els.sep.classList.add('hidden-force');
+                els.inputPriceMin.classList.remove('hidden-force');
+                els.inputPriceMax.classList.remove('hidden-force');
+            } else {
+                els.titleText.classList.remove('hidden-force');
+                els.editTitleArea.classList.add('hidden-force');
+                els.displayPriceMin.classList.remove('hidden-force');
+                els.inputPriceMin.classList.add('hidden-force');
+                els.inputPriceMax.classList.add('hidden-force');
+                renderProduct(); // Re-evaluate separator logic
+            }
+            
+            renderFooter();
+        }
+
+        // --- INIT & LISTENERS ---
+        renderProduct();
+        renderImages();
+        renderFooter();
+        renderAccordion();
+        renderReviews();
+
+        document.getElementById('btn-toggle-edit').onclick = toggleEditMode;
 
         // Input Listeners
-        els.inputPriceMin.addEventListener('input', (e) => state.product.priceMin = parseFloat(e.target.value));
-        els.inputPriceMax.addEventListener('input', (e) => state.product.priceMax = parseFloat(e.target.value));
-        els.inputTitle.addEventListener('input', (e) => state.product.title = e.target.value);
-        els.inputShopName.addEventListener('input', (e) => state.shopName = e.target.value);
+        document.getElementById('input-title').addEventListener('input', (e) => {
+            state.product.title = e.target.value;
+        });
+        document.getElementById('input-price-min').addEventListener('input', (e) => {
+            state.product.priceMin = parseFloat(e.target.value);
+        });
+        document.getElementById('input-price-max').addEventListener('input', (e) => {
+            state.product.priceMax = parseFloat(e.target.value);
+        });
+        document.getElementById('input-shop-name').addEventListener('input', (e) => {
+            state.shopName = e.target.value;
+        });
 
-        // --- AI GENERATION ---
-        window.generateAiTitle = async () => {
-            const apiKey = process.env.API_KEY;
-            
-            els.aiBtnText.textContent = "Gerando...";
-            const btn = document.getElementById('btn-generate-ai');
+        // Gemini AI Generation
+        document.getElementById('btn-generate-title').onclick = async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Gerando...`;
             btn.disabled = true;
 
             try {
-                if (!apiKey) throw new Error("API Key missing");
-                
+                const apiKey = process.env.API_KEY;
                 const ai = new GoogleGenAI({ apiKey });
                 const response = await ai.models.generateContent({
-                    model: "gemini-2.5-flash",
-                    contents: `Write a short, catchy, and viral TikTok Shop product title (max 20 words) in Portuguese (Brazil) for a product named: "${state.product.title}". Use emojis.`,
+                  model: "gemini-2.5-flash",
+                  contents: `Write a short, catchy, and viral TikTok Shop product title (max 20 words) in Portuguese (Brazil) for a product named: "${state.product.title}". Use emojis.`,
                 });
                 
                 const newTitle = response.text.trim();
                 state.product.title = newTitle;
-                renderProductInfo(); // Updates textarea
+                document.getElementById('input-title').value = newTitle;
             } catch (error) {
-                console.error("AI Error:", error);
+                console.error("Error generating title:", error);
                 alert("Erro ao gerar título. Verifique o console ou a API Key.");
             } finally {
-                els.aiBtnText.textContent = "Gerar Título Viral com IA";
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         };
-
-        // --- INIT ---
-        renderImages();
-        renderProductInfo();
-        renderReviews();
-
     </script>
   </body>
 </html>
